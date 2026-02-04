@@ -19,7 +19,7 @@ const AIRTABLE_TABLE_PRESENCES = process.env.AIRTABLE_TABLE_PRESENCES || "Prése
 
 // Route API sécurisée pour le pointage
 app.post('/api/pointage', async (req, res) => {
-    const { pin, type } = req.body;
+    const { pin, type } = req.body; // type: "arrivee" | "depart"
 
     if (!AIRTABLE_API_KEY || !AIRTABLE_BASE_ID) {
         console.error("Erreur: Variables d'environnement Airtable manquantes");
@@ -28,8 +28,9 @@ app.post('/api/pointage', async (req, res) => {
 
     try {
         // 1. Chercher l'employé par PIN
-        const formula = `{pin}="${pin}"`;
-        const empUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_EMPLOYEES)}?filterByFormula=${encodeURIComponent(formula)}`;
+        const empFormula = `{pin}="${pin}"`;
+        const empTableEncoded = encodeURIComponent(AIRTABLE_TABLE_EMPLOYEES);
+        const empUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${empTableEncoded}?filterByFormula=${encodeURIComponent(empFormula)}`;
 
         const empRes = await fetch(empUrl, {
             headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
@@ -37,7 +38,7 @@ app.post('/api/pointage', async (req, res) => {
 
         if (!empRes.ok) {
             const errText = await empRes.text();
-            throw new Error(`Erreur Airtable (Search): ${empRes.status} ${errText}`);
+            throw new Error(`Erreur Airtable (Search Employee): ${empRes.status} ${errText}`);
         }
 
         const empJson = await empRes.json();
@@ -47,47 +48,96 @@ app.post('/api/pointage', async (req, res) => {
         }
 
         const employee = empJson.records[0];
-        // Vérification si actif (si le champ existe)
         if (employee.fields && employee.fields.actif === false) {
             return res.status(403).json({ error: "Compte désactivé." });
         }
 
-        // 2. Créer l'enregistrement de présence
         const now = new Date();
-        const presenceData = {
-            fields: {
-                employe: [employee.id], // Relation vers la table Employees
-                type: (type === "arrivee" ? "Arrivée" : "Départ"),
-                date: now.toISOString().split("T")[0],
-                heure: now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }),
-                timestamp: now.toISOString()
-            }
-        };
+        const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
+        const timeStr = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
-        const presUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_PRESENCES)}`;
+        // 2. Chercher si une présence existe déjà pour aujourd'hui (date)
+        const presTableEncoded = encodeURIComponent(AIRTABLE_TABLE_PRESENCES);
+        const presFormula = `IS_SAME({date}, DATETIME_PARSE("${dateStr}"), "day")`;
+        const presUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${presTableEncoded}?filterByFormula=${encodeURIComponent(presFormula)}`;
+
         const presRes = await fetch(presUrl, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${AIRTABLE_API_KEY}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(presenceData)
+            headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
         });
 
         if (!presRes.ok) {
             const errText = await presRes.text();
-            throw new Error(`Erreur Airtable (Create): ${presRes.status} ${errText}`);
+            throw new Error(`Erreur Airtable (Search Presence): ${presRes.status} ${errText}`);
+        }
+
+        const presJson = await presRes.json();
+
+        // Trouver la ligne qui correspond à cet employé (en vérifiant le tableau d'IDs de Linked Record)
+        const todayRow = presJson.records.find(r => {
+            const links = r.fields.employe;
+            return Array.isArray(links) && links.includes(employee.id);
+        });
+
+        const presTableUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${presTableEncoded}`;
+
+        // LOGIQUE METIER (Compatible avec colonnes: 'heure_arrivee', 'heure_depart')
+        if (type === "arrivee") {
+            if (todayRow) {
+                if (todayRow.fields.heure_arrivee) {
+                    return res.status(400).json({ error: "Arrivée déjà enregistrée aujourd'hui." });
+                }
+                // UPDATE (Patch)
+                await fetch(`${presTableUrl}/${todayRow.id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ fields: { heure_arrivee: timeStr } })
+                });
+            } else {
+                // CREATE (Post)
+                await fetch(presTableUrl, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        fields: {
+                            employe: [employee.id],
+                            date: dateStr,
+                            heure_arrivee: timeStr
+                        }
+                    })
+                });
+            }
+        } else if (type === "depart") {
+            if (!todayRow) {
+                return res.status(400).json({ error: "Impossible de pointer le départ sans arrivée préalable." });
+            }
+            if (todayRow.fields.heure_depart) {
+                return res.status(400).json({ error: "Départ déjà enregistré aujourd'hui." });
+            }
+            // UPDATE (Patch)
+            await fetch(`${presTableUrl}/${todayRow.id}`, {
+                method: 'PATCH',
+                headers: {
+                    Authorization: `Bearer ${AIRTABLE_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ fields: { heure_depart: timeStr } })
+            });
         }
 
         res.json({
             ok: true,
             nom: employee.fields.nom || "Employé",
-            time: presenceData.fields.heure
+            time: timeStr
         });
 
     } catch (error) {
         console.error("Erreur serveur:", error);
-        // MODE DEBUG : On renvoie l'erreur technique pour comprendre (A supprimer en prod plus tard)
         res.status(500).json({ error: error.message || "Erreur lors du traitement de la demande." });
     }
 });
