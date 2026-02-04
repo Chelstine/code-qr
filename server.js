@@ -30,18 +30,18 @@ app.post('/api/pointage', async (req, res) => {
         // 1. Chercher l'employé par PIN
         const formula = `{pin}="${pin}"`;
         const empUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${encodeURIComponent(AIRTABLE_TABLE_EMPLOYEES)}?filterByFormula=${encodeURIComponent(formula)}`;
-        
+
         const empRes = await fetch(empUrl, {
             headers: { Authorization: `Bearer ${AIRTABLE_API_KEY}` }
         });
-        
+
         if (!empRes.ok) {
             const errText = await empRes.text();
             throw new Error(`Erreur Airtable (Search): ${empRes.status} ${errText}`);
         }
-        
+
         const empJson = await empRes.json();
-        
+
         if (!empJson.records || empJson.records.length === 0) {
             return res.status(401).json({ error: "Code PIN incorrect." });
         }
@@ -49,7 +49,7 @@ app.post('/api/pointage', async (req, res) => {
         const employee = empJson.records[0];
         // Vérification si actif (si le champ existe)
         if (employee.fields && employee.fields.actif === false) {
-             return res.status(403).json({ error: "Compte désactivé." });
+            return res.status(403).json({ error: "Compte désactivé." });
         }
 
         // 2. Créer l'enregistrement de présence
@@ -75,19 +75,20 @@ app.post('/api/pointage', async (req, res) => {
         });
 
         if (!presRes.ok) {
-             const errText = await presRes.text();
-             throw new Error(`Erreur Airtable (Create): ${presRes.status} ${errText}`);
+            const errText = await presRes.text();
+            throw new Error(`Erreur Airtable (Create): ${presRes.status} ${errText}`);
         }
 
-        res.json({ 
-            ok: true, 
+        res.json({
+            ok: true,
             nom: employee.fields.nom || "Employé",
-            time: presenceData.fields.heure 
+            time: presenceData.fields.heure
         });
 
     } catch (error) {
         console.error("Erreur serveur:", error);
-        res.status(500).json({ error: "Erreur lors du traitement de la demande." });
+        // MODE DEBUG : On renvoie l'erreur technique pour comprendre (A supprimer en prod plus tard)
+        res.status(500).json({ error: error.message || "Erreur lors du traitement de la demande." });
     }
 });
 
