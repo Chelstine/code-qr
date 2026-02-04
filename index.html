@@ -1,109 +1,224 @@
 <!doctype html>
 <html lang="fr">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NOVEK AI - Pointage</title>
   <style>
-    :root{
-      --primary:#2D4B8E; --primary-dark:#1e3a6e;
-      --bg:#f0f4fa; --card:#fff; --border:#d0daea;
-      --text:#1e3a6e; --muted:#5a6a8a;
-      --ok:#16a34a; --err:#dc2626;
-      --radius:14px;
+    :root {
+      --primary: #2D4B8E;
+      --primary-dark: #1e3a6e;
+      --bg: #f0f4fa;
+      --card: #fff;
+      --border: #d0daea;
+      --text: #1e3a6e;
+      --muted: #5a6a8a;
+      --ok: #16a34a;
+      --err: #dc2626;
+      --radius: 14px;
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background:var(--bg); color:var(--text);
-      min-height:100vh; display:flex; align-items:center; justify-content:center;
-      padding:18px;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
     }
-    .wrap{width:100%; max-width:460px}
-    .header{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:14px}
-    .badge{
-      width:64px;height:64px;border-radius:999px;
-      background:rgba(45,75,142,.10); display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(45,75,142,.15);
+
+    .wrap {
+      width: 100%;
+      max-width: 460px
     }
-    .badge svg{width:30px;height:30px; color:var(--primary)}
-    h1{font-size:1.6rem; text-align:center}
-    p{color:var(--muted); text-align:center; margin-top:4px}
-    .card{
-      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-      box-shadow:0 10px 30px rgba(45,75,142,.12);
-      padding:20px;
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px
     }
-    label{display:block; font-weight:600; margin:12px 0 6px}
-    input{
-      width:100%;
-      border:2px solid var(--border);
-      border-radius:12px;
-      padding:14px 12px;
-      font-size:1.2rem;
-      text-align:center;
-      letter-spacing:.25em;
-      outline:none;
-      background:#fff;
-      color:var(--text);
+
+    .badge {
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
+      background: rgba(45, 75, 142, .10);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(45, 75, 142, .15);
     }
-    input:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(45,75,142,.15)}
-    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px}
-    .radio{
-      border:2px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-      cursor:pointer;
-      user-select:none;
-      display:flex; align-items:center; justify-content:center;
-      gap:8px;
-      color:var(--text);
-      background:#fff;
-      transition:.15s;
-      font-weight:800;
+
+    .badge svg {
+      width: 30px;
+      height: 30px;
+      color: var(--primary)
     }
-    .radio[aria-checked="true"]{
-      border-color:var(--primary);
-      background:rgba(45,75,142,.06);
+
+    h1 {
+      font-size: 1.6rem;
+      text-align: center
     }
-    .btn{
-      width:100%;
-      margin-top:14px;
-      padding:14px 14px;
-      border:0;
-      border-radius:12px;
-      font-weight:800;
-      font-size:1.05rem;
-      cursor:pointer;
-      background:var(--primary);
-      color:#fff;
-      transition:.15s;
-      display:flex; align-items:center; justify-content:center; gap:10px;
+
+    p {
+      color: var(--muted);
+      text-align: center;
+      margin-top: 4px
     }
-    .btn:hover{background:var(--primary-dark)}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    .spinner{
-      width:18px;height:18px;border-radius:999px;
-      border:3px solid rgba(255,255,255,.35);
-      border-top-color:#fff;
-      animation:spin 1s linear infinite;
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(45, 75, 142, .12);
+      padding: 20px;
     }
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .alert{
-      margin-top:14px;
-      border-radius:12px;
-      padding:12px;
-      border:1px solid;
-      display:none;
-      white-space:pre-line;
-      line-height:1.35;
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin: 12px 0 6px
     }
-    .alert.ok{display:block; border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.08); color:var(--ok)}
-    .alert.err{display:block; border-color:rgba(220,38,38,.25); background:rgba(220,38,38,.08); color:var(--err)}
-    .foot{margin-top:12px; text-align:center; color:var(--muted); font-size:.85rem}
-    .hint{margin-top:10px; font-size:.85rem; color:var(--muted); text-align:center}
+
+    input {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 12px;
+      font-size: 1.2rem;
+      text-align: center;
+      letter-spacing: .25em;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(45, 75, 142, .15)
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px
+    }
+
+    .radio {
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text);
+      background: #fff;
+      transition: .15s;
+      font-weight: 800;
+    }
+
+    .radio[aria-checked="true"] {
+      border-color: var(--primary);
+      background: rgba(45, 75, 142, .06);
+    }
+
+    .btn {
+      width: 100%;
+      margin-top: 14px;
+      padding: 14px 14px;
+      border: 0;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 1.05rem;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      transition: .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark)
+    }
+
+    .btn:disabled {
+      opacity: .6;
+      cursor: not-allowed
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 3px solid rgba(255, 255, 255, .35);
+      border-top-color: #fff;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    .alert {
+      margin-top: 14px;
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid;
+      display: none;
+      white-space: pre-line;
+      line-height: 1.35;
+    }
+
+    .alert.ok {
+      display: block;
+      border-color: rgba(22, 163, 74, .25);
+      background: rgba(22, 163, 74, .08);
+      color: var(--ok)
+    }
+
+    .alert.err {
+      display: block;
+      border-color: rgba(220, 38, 38, .25);
+      background: rgba(220, 38, 38, .08);
+      color: var(--err)
+    }
+
+    .foot {
+      margin-top: 12px;
+      text-align: center;
+      color: var(--muted);
+      font-size: .85rem
+    }
+
+    .hint {
+      margin-top: 10px;
+      font-size: .85rem;
+      color: var(--muted);
+      text-align: center
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <div class="header">
@@ -134,7 +249,7 @@
       <div class="hint">Un seul QR code peut pointer vers cette page.</div>
     </div>
 
-    <div class="foot">© 2026 NOVEK AI</div>
+    <div class="foot">© 2026 NOVEK AI - v1.0.1</div>
   </div>
 
   <script>
@@ -143,7 +258,7 @@
     // =============================
     // URL de notre API locale (le serveur Node.js qu'on vient de créer)
     // Sur Railway, cela s'adaptera automatiquement.
-    const POINTAGE_API_URL = "/api/pointage"; 
+    const POINTAGE_API_URL = "/api/pointage";
 
     // NOTE: La configuration AIRTABLE a été déplacée côté serveur (server.js)
     // pour des raisons de sécurité.
@@ -373,4 +488,5 @@
     });
   </script>
 </body>
+
 </html>
