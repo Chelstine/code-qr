@@ -1,274 +1,889 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NOVEK AI - Pointage</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOVEK AI - Enregistrement Employé</title>
   <style>
-    :root{
-      --primary:#2D4B8E; --primary-dark:#1e3a6e;
-      --bg:#f0f4fa; --card:#fff; --border:#d0daea;
-      --text:#1e3a6e; --muted:#5a6a8a;
-      --ok:#16a34a; --err:#dc2626; --warn:#f59e0b;
-      --radius:14px;
+    /* === RESET & BASE === */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background:var(--bg); color:var(--text);
-      min-height:100vh; display:flex; align-items:center; justify-content:center;
-      padding:18px;
+
+    :root {
+      --primary: #2D4B8E;
+      --primary-dark: #1e3a6e;
+      --secondary: #E5A83B;
+      --secondary-dark: #c8922e;
+      --background: #f0f4fa;
+      --card-bg: #ffffff;
+      --text-primary: #1e3a6e;
+      --text-secondary: #5a6a8a;
+      --text-muted: #8a9ab0;
+      --border: #d0daea;
+      --error: #dc3545;
+      --success: #28a745;
+      --radius: 12px;
     }
-    .wrap{width:100%; max-width:460px}
-    .header{display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:14px}
-    .badge{
-      width:64px;height:64px;border-radius:999px;
-      background:rgba(45,75,142,.10); display:flex; align-items:center; justify-content:center;
-      border:1px solid rgba(45,75,142,.15);
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--background);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      color: var(--text-primary);
     }
-    .badge svg{width:30px;height:30px; color:var(--primary)}
-    h1{font-size:1.6rem; text-align:center}
-    p{color:var(--muted); text-align:center; margin-top:4px}
-    .card{
-      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-      box-shadow:0 10px 30px rgba(45,75,142,.12);
-      padding:20px;
+
+    /* === HEADER === */
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 24px;
     }
-    label{display:block; font-weight:600; margin:12px 0 6px}
-    input{
-      width:100%;
-      border:2px solid var(--border);
-      border-radius:12px;
-      padding:14px 12px;
-      font-size:1.2rem;
-      text-align:center;
-      letter-spacing:.25em;
-      outline:none;
-      background:#fff;
-      color:var(--text);
+
+    .logo {
+      width: 80px;
+      height: auto;
+      margin-bottom: 16px;
     }
-    input:focus{border-color:var(--primary); box-shadow:0 0 0 3px rgba(45,75,142,.15)}
-    .row{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px}
-    .radio{
-      border:2px solid var(--border);
-      border-radius:12px;
-      padding:12px;
-      cursor:pointer;
-      -webkit-user-select:none;
-      user-select:none;
-      display:flex; align-items:center; justify-content:center;
-      gap:8px;
-      color:var(--text);
-      background:#fff;
-      transition:.15s;
-      font-weight:700;
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-align: center;
     }
-    .radio[aria-checked="true"]{
-      border-color:var(--primary);
-      background:rgba(45,75,142,.06);
+
+    .header p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      text-align: center;
     }
-    .btn{
-      width:100%;
-      margin-top:14px;
-      padding:14px 14px;
-      border:0;
-      border-radius:12px;
-      font-weight:800;
-      font-size:1.05rem;
-      cursor:pointer;
-      background:var(--primary);
-      color:#fff;
-      transition:.15s;
-      display:flex; align-items:center; justify-content:center; gap:10px;
+
+    /* === CARD === */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px rgba(45, 75, 142, 0.1);
+      width: 100%;
+      max-width: 480px;
+      padding: 32px;
+      border: 1px solid var(--border);
     }
-    .btn:hover{background:var(--primary-dark)}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
-    .spinner{
-      width:18px;height:18px;border-radius:999px;
-      border:3px solid rgba(255,255,255,.35);
-      border-top-color:#fff;
-      animation:spin 1s linear infinite;
+
+    /* === FORM === */
+    .form-group {
+      margin-bottom: 20px;
     }
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .alert{
-      margin-top:14px;
-      border-radius:12px;
-      padding:12px;
-      border:1px solid;
-      display:none;
-      white-space:pre-line;
-      line-height:1.35;
+
+    .form-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
     }
-    .alert.ok{display:block; border-color:rgba(22,163,74,.25); background:rgba(22,163,74,.08); color:var(--ok)}
-    .alert.err{display:block; border-color:rgba(220,38,38,.25); background:rgba(220,38,38,.08); color:var(--err)}
-    .foot{margin-top:12px; text-align:center; color:var(--muted); font-size:.85rem}
-    .hint{margin-top:10px; font-size:.85rem; color:var(--muted); text-align:center}
-    code{font-family: ui-monospace, SFMono-Regular, Menlo, monospace}
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 14px;
+      color: var(--text-muted);
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 14px 14px 44px;
+      font-size: 1rem;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card-bg);
+      color: var(--text-primary);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(45, 75, 142, 0.15);
+    }
+
+    .form-input.error {
+      border-color: var(--error);
+    }
+
+    .form-input.success {
+      border-color: var(--success);
+    }
+
+    /* === PIN INPUT === */
+    .pin-input-wrapper {
+      position: relative;
+    }
+
+    .pin-input {
+      padding-right: 90px;
+    }
+
+    .pin-toggle {
+      position: absolute;
+      right: 44px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pin-toggle:hover {
+      color: var(--primary);
+    }
+
+    .pin-status {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pin-status svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .pin-status.checking {
+      color: var(--text-muted);
+      animation: spin 1s linear infinite;
+    }
+
+    .pin-status.available {
+      color: var(--success);
+    }
+
+    .pin-status.unavailable {
+      color: var(--error);
+    }
+
+    @keyframes spin {
+      from { transform: translateY(-50%) rotate(0deg); }
+      to { transform: translateY(-50%) rotate(360deg); }
+    }
+
+    /* === ERROR MESSAGE === */
+    .error-message {
+      font-size: 0.75rem;
+      color: var(--error);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* === ALERT === */
+    .alert {
+      padding: 16px;
+      border-radius: var(--radius);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: var(--error);
+    }
+
+    .alert-success {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: var(--success);
+    }
+
+    .alert svg {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+    }
+
+    /* === BUTTON === */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 16px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color 0.2s, transform 0.1s;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-dark);
+    }
+
+    .btn-primary:disabled {
+      background: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--secondary-dark);
+    }
+
+    .btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* === LOADING SPINNER === */
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+
+    /* === SUCCESS SCREEN === */
+    .success-screen {
+      display: none;
+      text-align: center;
+    }
+
+    .success-screen.active {
+      display: block;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--success), #20c997);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      color: white;
+    }
+
+    .success-icon svg {
+      width: 40px;
+      height: 40px;
+    }
+
+    .success-screen h2 {
+      font-size: 1.5rem;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .success-screen p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+
+    .matricule-box {
+      background: var(--background);
+      border: 2px dashed var(--primary);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .matricule-box span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .matricule-box strong {
+      font-size: 1.5rem;
+      color: var(--primary);
+      font-family: 'Courier New', monospace;
+    }
+
+    .qr-id-box {
+      background: linear-gradient(135deg, var(--secondary), #f0c060);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+
+    .qr-id-box span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-primary);
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+
+    .qr-id-box strong {
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      font-family: 'Courier New', monospace;
+    }
+
+    /* === FORM HIDDEN === */
+    .form-content.hidden {
+      display: none;
+    }
+
+    /* === FOOTER === */
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 480px) {
+      .card {
+        padding: 24px 20px;
+      }
+
+      .header h1 {
+        font-size: 1.25rem;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="header">
-      <div class="badge" aria-hidden="true">
+  <header class="header">
+    <img src="image/logo-novek.jpeg" alt="NOVEK AI Logo" class="logo">
+    <h1>Enregistrement Membres Novek AI</h1>
+    <p>Créez votre compte pour accéder au système de pointage</p>
+  </header>
+
+  <main class="card">
+    <!-- Form Content -->
+    <div id="formContent" class="form-content">
+      <form id="registrationForm" novalidate>
+        <!-- Nom -->
+        <div class="form-group">
+          <label class="form-label" for="nom">Nom</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <input type="text" id="nom" name="nom" class="form-input" placeholder="Entrez votre nom" required>
+          </div>
+          <div class="error-message" id="nomError"></div>
+        </div>
+
+        <!-- Prénom -->
+        <div class="form-group">
+          <label class="form-label" for="prenom">Prénom</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <input type="text" id="prenom" name="prenom" class="form-input" placeholder="Entrez votre prénom" required>
+          </div>
+          <div class="error-message" id="prenomError"></div>
+        </div>
+
+        <!-- Email -->
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16v16H4z" opacity="0"></path>
+              <path d="M4 6h16v12H4z"></path>
+              <path d="M4 7l8 6 8-6"></path>
+            </svg>
+            <input type="email" id="email" name="email" class="form-input" placeholder="Entrez votre email" required>
+          </div>
+          <div class="error-message" id="emailError"></div>
+        </div>
+
+        <!-- Téléphone -->
+        <div class="form-group">
+          <label class="form-label" for="telephone">Numéro de téléphone</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.86.32 1.7.59 2.5a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.58-1.11a2 2 0 0 1 2.11-.45c.8.27 1.64.47 2.5.59A2 2 0 0 1 22 16.92z"></path>
+            </svg>
+            <input type="tel" id="telephone" name="telephone" class="form-input" placeholder="Entrez votre numéro" required>
+          </div>
+          <div class="error-message" id="telephoneError"></div>
+        </div>
+
+        <!-- Poste -->
+        <div class="form-group">
+          <label class="form-label" for="poste">Poste / Fonction</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            <input type="text" id="poste" name="poste" class="form-input" placeholder="Entrez votre poste" required>
+          </div>
+          <div class="error-message" id="posteError"></div>
+        </div>
+
+        <!-- Date de naissance -->
+        <div class="form-group">
+          <label class="form-label" for="dateNaissance">Date de naissance</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <input type="date" id="dateNaissance" name="dateNaissance" class="form-input" required>
+          </div>
+          <div class="error-message" id="dateNaissanceError"></div>
+        </div>
+
+        <!-- Code PIN -->
+        <div class="form-group">
+          <label class="form-label" for="pin">Code PIN (4-6 chiffres)</label>
+          <div class="input-wrapper pin-input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input type="password" id="pin" name="pin" class="form-input pin-input" placeholder="Votre code PIN" maxlength="6" required>
+            <button type="button" class="pin-toggle" id="pinToggle" aria-label="Afficher le PIN">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+            <div class="pin-status" id="pinStatus"></div>
+          </div>
+          <div class="error-message" id="pinError"></div>
+        </div>
+
+        <!-- Confirmation PIN -->
+        <div class="form-group">
+          <label class="form-label" for="confirmPin">Confirmer le code PIN</label>
+          <div class="input-wrapper pin-input-wrapper">
+            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <input type="password" id="confirmPin" name="confirmPin" class="form-input pin-input" placeholder="Confirmez votre code PIN" maxlength="6" required>
+            <button type="button" class="pin-toggle" id="confirmPinToggle" aria-label="Afficher le PIN">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+          <div class="error-message" id="confirmPinError"></div>
+        </div>
+
+        <!-- General Error Alert -->
+        <div class="alert alert-error" id="generalError" style="display: none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+          <span id="generalErrorText"></span>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span id="submitText">Enregistrer l'employé</span>
+          <svg id="submitSpinner" class="spinner" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+          </svg>
+        </button>
+      </form>
+    </div>
+
+    <!-- Success Screen -->
+    <div id="successScreen" class="success-screen">
+      <div class="success-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="9"></circle>
-          <path d="M12 7v6l4 2"></path>
+          <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
       </div>
-      <div>
-        <h1>Pointage</h1>
-        <p>Entrez votre PIN, choisissez Arrivée ou Départ, puis validez.</p>
+      <h2>Inscription réussie !</h2>
+      <p>Bienvenue Parmis nous à Novek AI.</p>
+      
+      <div class="matricule-box">
+        <span>Matricule</span>
+        <strong id="matriculeValue">-</strong>
       </div>
-    </div>
-
-    <div class="card">
-      <label for="pin">Code PIN (4 à 6 chiffres)</label>
-      <input id="pin" inputmode="numeric" autocomplete="off" placeholder="••••" maxlength="6" />
-
-      <div class="row" role="radiogroup" aria-label="Type de pointage">
-        <div class="radio" id="rArrivee" role="radio" aria-checked="true" tabindex="0">Arrivée</div>
-        <div class="radio" id="rDepart" role="radio" aria-checked="false" tabindex="0">Départ</div>
+      
+      <div class="qr-id-box">
+        <span>QR ID</span>
+        <strong id="qrIdValue">-</strong>
       </div>
-
-      <button class="btn" id="btn" type="button">Valider</button>
-
-      <div class="alert" id="alert"></div>
-
-      <div class="hint" id="hint"></div>
+      
+      
     </div>
+  </main>
 
-    <div class="foot">© 2026 NOVEK AI</div>
-  </div>
+  <footer class="footer">
+    <p>&copy; 2026 NOVEK AI - Système de pointage intelligent</p>
+  </footer>
 
   <script>
-    // =============================
-    // CONFIG
-    // =============================
-
-    // URL de notre API locale (le serveur Node.js qu'on vient de créer)
+    // =============================================
+    // CONFIGURATION AIRTABLE
+    // =============================================
+   // URL de notre API locale (le serveur Node.js qu'on vient de créer)
     // Sur Railway, cela s'adaptera automatiquement.
     const POINTAGE_API_URL = "/api/pointage"; 
 
     // NOTE: La configuration AIRTABLE a été déplacée côté serveur (server.js)
     // pour des raisons de sécurité.
 
+    // =============================================
+    // ELEMENTS DOM
+    // =============================================
+    const form = document.getElementById('registrationForm');
+    const formContent = document.getElementById('formContent');
+    const successScreen = document.getElementById('successScreen');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const submitSpinner = document.getElementById('submitSpinner');
+    const generalError = document.getElementById('generalError');
+    const generalErrorText = document.getElementById('generalErrorText');
+    const newRegistrationBtn = document.getElementById('newRegistrationBtn');
+    
+    const pinInput = document.getElementById('pin');
+    const confirmPinInput = document.getElementById('confirmPin');
+    const pinToggle = document.getElementById('pinToggle');
+    const confirmPinToggle = document.getElementById('confirmPinToggle');
+    const pinStatus = document.getElementById('pinStatus');
 
-    // =============================
-    // UI
-    // =============================
-    const pinEl = document.getElementById("pin");
-    const btn = document.getElementById("btn");
-    const alertEl = document.getElementById("alert");
-    const hintEl = document.getElementById("hint");
-    const rArrivee = document.getElementById("rArrivee");
-    const rDepart = document.getElementById("rDepart");
-
-    let type = "arrivee"; // arrivee | depart
-    let busy = false;
-
-    function setRadio(next) {
-      type = next;
-      rArrivee.setAttribute("aria-checked", next === "arrivee" ? "true" : "false");
-      rDepart.setAttribute("aria-checked", next === "depart" ? "true" : "false");
+    // =============================================
+    // UTILITAIRES
+    // =============================================
+    function generateMatricule() {
+      const year = new Date().getFullYear();
+      const randomNum = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
+      return `NOV-EMP-${year}-${randomNum}`;
     }
 
-    rArrivee.addEventListener("click", () => setRadio("arrivee"));
-    rDepart.addEventListener("click", () => setRadio("depart"));
-    rArrivee.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") setRadio("arrivee"); });
-    rDepart.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") setRadio("depart"); });
-
-    function showAlert(kind, text) {
-      alertEl.className = "alert " + (kind === "ok" ? "ok" : "err");
-      alertEl.textContent = text;
+    function generateQrId() {
+      const randomNum = Math.floor(Math.random() * 99999).toString().padStart(5, '0');
+      return `EMP-${randomNum}`;
     }
 
-    function clearAlert() {
-      alertEl.className = "alert";
-      alertEl.textContent = "";
+    function showError(fieldId, message) {
+      const errorElement = document.getElementById(fieldId + 'Error');
+      const inputElement = document.getElementById(fieldId);
+      if (errorElement) errorElement.textContent = message;
+      if (inputElement) inputElement.classList.add('error');
     }
 
-    function setLoading(on) {
-      busy = on;
-      btn.disabled = on;
-      btn.innerHTML = on ? '<span class="spinner"></span> Vérification...' : "Valider";
+    function clearError(fieldId) {
+      const errorElement = document.getElementById(fieldId + 'Error');
+      const inputElement = document.getElementById(fieldId);
+      if (errorElement) errorElement.textContent = '';
+      if (inputElement) inputElement.classList.remove('error');
     }
 
-    function normalizePin(value) {
-      return (value || "").replace(/\D/g, "").slice(0, 6);
+    function clearAllErrors() {
+      ['nom', 'prenom', 'email', 'telephone', 'poste', 'dateNaissance', 'pin', 'confirmPin'].forEach(clearError);
+      generalError.style.display = 'none';
     }
 
-    pinEl.addEventListener("input", () => {
-      pinEl.value = normalizePin(pinEl.value);
-      clearAlert();
+    function setLoading(isLoading) {
+      submitBtn.disabled = isLoading;
+      submitText.textContent = isLoading ? 'Enregistrement...' : 'Enregistrer l\'employé';
+      submitSpinner.style.display = isLoading ? 'block' : 'none';
+    }
+
+    // =============================================
+    // TOGGLE PIN VISIBILITY
+    // =============================================
+    let pinVisible = false;
+    let confirmPinVisible = false;
+
+    pinToggle.addEventListener('click', () => {
+      pinVisible = !pinVisible;
+      pinInput.type = pinVisible ? 'text' : 'password';
+      pinToggle.innerHTML = pinVisible 
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
     });
 
-    // Pré-remplissage si l’URL contient ?pin=1234
-    const params = new URLSearchParams(location.search);
-    if (params.get("pin")) pinEl.value = normalizePin(params.get("pin"));
-    if (params.get("type") === "depart") setRadio("depart");
+    confirmPinToggle.addEventListener('click', () => {
+      confirmPinVisible = !confirmPinVisible;
+      confirmPinInput.type = confirmPinVisible ? 'text' : 'password';
+      confirmPinToggle.innerHTML = confirmPinVisible 
+        ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>'
+        : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+    });
 
-    hintEl.textContent = location.href.includes("?")
-      ? "Astuce: tu peux générer un QR code qui pointe vers cette page."
-      : "Astuce: ajoute ?pin=1234 au lien si tu veux pré-remplir le PIN.";
+    // =============================================
+    // PIN AVAILABILITY CHECK
+    // =============================================
+    let pinCheckTimeout;
+    let isPinAvailable = null;
 
-    // =============================
-    // Option A: Appel API (Serveur Node.js)
-    // =============================
-    async function callMyApi(pin) {
-      const res = await fetch(POINTAGE_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin, type })
-      });
+    pinInput.addEventListener('input', (e) => {
+      const value = e.target.value.replace(/\D/g, '');
+      e.target.value = value;
+      clearError('pin');
+      
+      clearTimeout(pinCheckTimeout);
+      pinStatus.innerHTML = '';
+      pinStatus.className = 'pin-status';
+      isPinAvailable = null;
 
-      const text = await res.text();
-      let data;
-      try { data = JSON.parse(text); } catch { data = { raw: text }; }
-
-      if (!res.ok) {
-        const msg = data?.error || data?.message || ("Erreur API HTTP " + res.status);
-        throw new Error(msg);
+      if (value.length >= 4 && value.length <= 6) {
+        pinStatus.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>';
+        pinStatus.className = 'pin-status checking';
+        
+        pinCheckTimeout = setTimeout(() => checkPinAvailability(value), 500);
       }
-      return data;
+    });
+
+    confirmPinInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '');
+      clearError('confirmPin');
+    });
+
+    async function checkPinAvailability(pin) {
+      try {
+        const url = `https://api.airtable.com/v0/${AIRTABLE_CONFIG.baseId}/${AIRTABLE_CONFIG.tableName}?filterByFormula={pin}="${pin}"`;
+        
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${AIRTABLE_CONFIG.apiKey}`
+          }
+        });
+
+        if (!response.ok) throw new Error('Erreur API');
+
+        const data = await response.json();
+        isPinAvailable = data.records.length === 0;
+
+        if (isPinAvailable) {
+          pinStatus.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+          pinStatus.className = 'pin-status available';
+          pinInput.classList.remove('error');
+          pinInput.classList.add('success');
+        } else {
+          pinStatus.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>';
+          pinStatus.className = 'pin-status unavailable';
+          pinInput.classList.remove('success');
+          showError('pin', 'Ce code PIN est déjà utilisé');
+        }
+      } catch (error) {
+        console.error('Erreur vérification PIN:', error);
+        pinStatus.innerHTML = '';
+        pinStatus.className = 'pin-status';
+      }
     }
 
-    // L'ancienne fonction callAirtableDirect a été supprimée pour sécurité.
+    // =============================================
+    // VALIDATION
+    // =============================================
+    function validateForm() {
+      const nom = document.getElementById('nom').value.trim();
+      const prenom = document.getElementById('prenom').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const telephone = document.getElementById('telephone').value.trim();
+      const poste = document.getElementById('poste').value.trim();
+      const dateNaissance = document.getElementById('dateNaissance').value;
+      const pin = pinInput.value;
+      const confirmPin = confirmPinInput.value;
 
-    // =============================
-    // Submit
-    // =============================
-    btn.addEventListener("click", async () => {
-      const pin = normalizePin(pinEl.value);
+      let isValid = true;
+      clearAllErrors();
 
-      if (!pin || pin.length < 4) {
-        showAlert("err", "Veuillez entrer un code PIN valide (4 chiffres minimum).");
-        return;
+      if (!nom) {
+        showError('nom', 'Le nom est requis');
+        isValid = false;
       }
 
-      clearAlert();
+      if (!prenom) {
+        showError('prenom', 'Le prénom est requis');
+        isValid = false;
+      }
+
+      if (!email) {
+        showError('email', 'L\'email est requis');
+        isValid = false;
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showError('email', 'Veuillez entrer un email valide');
+        isValid = false;
+      }
+
+      if (!telephone) {
+        showError('telephone', 'Le numéro de téléphone est requis');
+        isValid = false;
+      } else {
+        const telClean = telephone.replace(/\s+/g, '');
+        if (!/^\+?[0-9]{8,15}$/.test(telClean)) {
+          showError('telephone', 'Veuillez entrer un numéro valide (8 à 15 chiffres)');
+          isValid = false;
+        }
+      }
+
+      if (!poste) {
+        showError('poste', 'Le poste est requis');
+        isValid = false;
+      }
+
+      if (!dateNaissance) {
+        showError('dateNaissance', 'La date de naissance est requise');
+        isValid = false;
+      }
+
+      if (!pin) {
+        showError('pin', 'Le code PIN est requis');
+        isValid = false;
+      } else if (!/^\d{4,6}$/.test(pin)) {
+        showError('pin', 'Le PIN doit contenir 4 à 6 chiffres');
+        isValid = false;
+      } else if (isPinAvailable === false) {
+        showError('pin', 'Ce code PIN est déjà utilisé');
+        isValid = false;
+      }
+
+      if (!confirmPin) {
+        showError('confirmPin', 'La confirmation est requise');
+        isValid = false;
+      } else if (pin !== confirmPin) {
+        showError('confirmPin', 'Les codes PIN ne correspondent pas');
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    // =============================================
+    // FORM SUBMISSION
+    // =============================================
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      if (!validateForm()) return;
+
       setLoading(true);
 
+      const matricule = generateMatricule();
+      const qrId = generateQrId();
+
+      const employeeData = {
+        fields: {
+          nom: document.getElementById('nom').value.trim(),
+          prenom: document.getElementById('prenom').value.trim(),
+          email: document.getElementById('email').value.trim(),
+          telephone: document.getElementById('telephone').value.trim(),
+          poste: document.getElementById('poste').value.trim(),
+          date_naissance: document.getElementById('dateNaissance').value,
+          pin: pinInput.value,
+          matricule: matricule,
+          qr_id: qrId,
+          actif: true,
+          date_inscription: new Date().toISOString().split('T')[0]
+        }
+      };
+
       try {
-        // On appelle toujours l'API maintenant
-        let result = await callMyApi(pin);
+        const response = await fetch(
+          `https://api.airtable.com/v0/${AIRTABLE_CONFIG.baseId}/${AIRTABLE_CONFIG.tableName}`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${AIRTABLE_CONFIG.apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(employeeData)
+          }
+        );
 
-        const now = new Date();
-        const time = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-        const label = (type === "arrivee") ? "Arrivée" : "Départ";
-        const nom = result?.nom || result?.employeeName || "Employé";
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error?.message || 'Erreur lors de l\'enregistrement');
+        }
 
-        showAlert("ok", `${label} enregistrée à ${time}\n${nom}`);
+        // Success - show success screen
+        document.getElementById('matriculeValue').textContent = matricule;
+        document.getElementById('qrIdValue').textContent = qrId;
+        formContent.classList.add('hidden');
+        successScreen.classList.add('active');
 
-        setTimeout(() => {
-          pinEl.value = "";
-          clearAlert();
-        }, 2500);
-
-      } catch (e) {
-        showAlert("err", (e && e.message) ? e.message : "Erreur de connexion. Réessayez.");
+      } catch (error) {
+        console.error('Erreur:', error);
+        generalErrorText.textContent = error.message || 'Une erreur est survenue lors de l\'enregistrement';
+        generalError.style.display = 'flex';
       } finally {
         setLoading(false);
       }
+    });
+
+    // =============================================
+    // NEW REGISTRATION
+    // =============================================
+    newRegistrationBtn.addEventListener('click', () => {
+      form.reset();
+      clearAllErrors();
+      pinStatus.innerHTML = '';
+      pinStatus.className = 'pin-status';
+      isPinAvailable = null;
+      formContent.classList.remove('hidden');
+      successScreen.classList.remove('active');
+    });
+
+    // Clear errors on input
+    ['nom', 'prenom', 'email', 'telephone', 'poste', 'dateNaissance'].forEach(fieldId => {
+      document.getElementById(fieldId).addEventListener('input', () => clearError(fieldId));
+    });
+
+    // Nettoyage téléphone: autoriser chiffres + +
+    document.getElementById('telephone').addEventListener('input', (e) => {
+      const v = e.target.value;
+      e.target.value = v.replace(/[^0-9+\s]/g, '');
     });
   </script>
 </body>
