@@ -9,7 +9,7 @@
       --primary:#2D4B8E; --primary-dark:#1e3a6e;
       --bg:#f0f4fa; --card:#fff; --border:#d0daea;
       --text:#1e3a6e; --muted:#5a6a8a;
-      --ok:#16a34a; --err:#dc2626; --warn:#f59e0b;
+      --ok:#16a34a; --err:#dc2626;
       --radius:14px;
     }
     *{box-sizing:border-box;margin:0;padding:0}
@@ -54,14 +54,13 @@
       border-radius:12px;
       padding:12px;
       cursor:pointer;
-      -webkit-user-select:none;
       user-select:none;
       display:flex; align-items:center; justify-content:center;
       gap:8px;
       color:var(--text);
       background:#fff;
       transition:.15s;
-      font-weight:700;
+      font-weight:800;
     }
     .radio[aria-checked="true"]{
       border-color:var(--primary);
@@ -103,7 +102,6 @@
     .alert.err{display:block; border-color:rgba(220,38,38,.25); background:rgba(220,38,38,.08); color:var(--err)}
     .foot{margin-top:12px; text-align:center; color:var(--muted); font-size:.85rem}
     .hint{margin-top:10px; font-size:.85rem; color:var(--muted); text-align:center}
-    code{font-family: ui-monospace, SFMono-Regular, Menlo, monospace}
   </style>
 </head>
 <body>
@@ -133,8 +131,7 @@
       <button class="btn" id="btn" type="button">Valider</button>
 
       <div class="alert" id="alert"></div>
-
-      <div class="hint" id="hint"></div>
+      <div class="hint">Un seul QR code peut pointer vers cette page.</div>
     </div>
 
     <div class="foot">© 2026 NOVEK AI</div>
@@ -144,7 +141,6 @@
     // =============================
     // CONFIG
     // =============================
-
     // URL de notre API locale (le serveur Node.js qu'on vient de créer)
     // Sur Railway, cela s'adaptera automatiquement.
     const POINTAGE_API_URL = "/api/pointage"; 
@@ -152,6 +148,9 @@
     // NOTE: La configuration AIRTABLE a été déplacée côté serveur (server.js)
     // pour des raisons de sécurité.
 
+    // Noms EXACTS des champs
+    const EMP_FIELDS = { pin: "pin", nom: "nom", actif: "actif" };
+    const PRES_FIELDS = { employeLink: "employe", date: "date", arrivee: "heure_arrivee", depart: "heure_depart" };
 
     // =============================
     // UI
@@ -159,19 +158,16 @@
     const pinEl = document.getElementById("pin");
     const btn = document.getElementById("btn");
     const alertEl = document.getElementById("alert");
-    const hintEl = document.getElementById("hint");
     const rArrivee = document.getElementById("rArrivee");
     const rDepart = document.getElementById("rDepart");
 
-    let type = "arrivee"; // arrivee | depart
-    let busy = false;
+    let type = "arrivee";
 
     function setRadio(next) {
       type = next;
       rArrivee.setAttribute("aria-checked", next === "arrivee" ? "true" : "false");
       rDepart.setAttribute("aria-checked", next === "depart" ? "true" : "false");
     }
-
     rArrivee.addEventListener("click", () => setRadio("arrivee"));
     rDepart.addEventListener("click", () => setRadio("depart"));
     rArrivee.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") setRadio("arrivee"); });
@@ -181,58 +177,166 @@
       alertEl.className = "alert " + (kind === "ok" ? "ok" : "err");
       alertEl.textContent = text;
     }
-
     function clearAlert() {
       alertEl.className = "alert";
       alertEl.textContent = "";
     }
-
     function setLoading(on) {
-      busy = on;
       btn.disabled = on;
-      btn.innerHTML = on ? '<span class="spinner"></span> Vérification...' : "Valider";
+      btn.innerHTML = on ? '<span class="spinner"></span> Traitement...' : "Valider";
     }
-
     function normalizePin(value) {
       return (value || "").replace(/\D/g, "").slice(0, 6);
     }
-
     pinEl.addEventListener("input", () => {
       pinEl.value = normalizePin(pinEl.value);
       clearAlert();
     });
 
-    // Pré-remplissage si l’URL contient ?pin=1234
-    const params = new URLSearchParams(location.search);
-    if (params.get("pin")) pinEl.value = normalizePin(params.get("pin"));
-    if (params.get("type") === "depart") setRadio("depart");
+    // Date locale
+    function todayDateStr() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+    function timeStr() {
+      return new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    }
 
-    hintEl.textContent = location.href.includes("?")
-      ? "Astuce: tu peux générer un QR code qui pointe vers cette page."
-      : "Astuce: ajoute ?pin=1234 au lien si tu veux pré-remplir le PIN.";
-
-    // =============================
-    // Option A: Appel API (Serveur Node.js)
-    // =============================
-    async function callMyApi(pin) {
-      const res = await fetch(POINTAGE_API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin, type })
+    async function airtableFetch(url, options = {}) {
+      const res = await fetch(url, {
+        ...options,
+        headers: {
+          Authorization: `Bearer ${AIRTABLE.apiKey}`,
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
       });
 
       const text = await res.text();
-      let data;
-      try { data = JSON.parse(text); } catch { data = { raw: text }; }
+      let json;
+      try { json = JSON.parse(text); } catch { json = { raw: text }; }
 
       if (!res.ok) {
-        const msg = data?.error || data?.message || ("Erreur API HTTP " + res.status);
+        const msg = json?.error?.message || json?.message || ("HTTP " + res.status);
         throw new Error(msg);
       }
-      return data;
+      return json;
     }
 
-    // L'ancienne fonction callAirtableDirect a été supprimée pour sécurité.
+    // Récupérer TOUTES les pages (offset) pour éviter de rater un record
+    async function fetchAllRecords(urlBase) {
+      let all = [];
+      let offset = null;
+
+      while (true) {
+        const url = offset ? `${urlBase}&offset=${encodeURIComponent(offset)}` : urlBase;
+        const json = await airtableFetch(url);
+        all = all.concat(json.records || []);
+        if (!json.offset) break;
+        offset = json.offset;
+      }
+      return all;
+    }
+
+    // =============================
+    // LOGIQUE: même ligne par employé + date
+    // =============================
+    async function savePresence(pin, chosenType) {
+      const base = AIRTABLE.baseId;
+      const empTable = encodeURIComponent(AIRTABLE.employeesTable);
+      const presTable = encodeURIComponent(AIRTABLE.presencesTable);
+
+      // 1) Trouver l'employé par PIN
+      const empFormula = `{${EMP_FIELDS.pin}}="${pin}"`;
+      const empUrlBase = `https://api.airtable.com/v0/${base}/${empTable}?filterByFormula=${encodeURIComponent(empFormula)}`;
+      const empJson = await airtableFetch(empUrlBase);
+
+      if (!empJson.records || empJson.records.length === 0) {
+        throw new Error("Code PIN incorrect. Accès refusé.");
+      }
+
+      const employee = empJson.records[0];
+      const nom = employee.fields?.[EMP_FIELDS.nom] || "Employé";
+
+      if (employee.fields?.[EMP_FIELDS.actif] === false) {
+        throw new Error("Compte désactivé. Contactez l’administrateur.");
+      }
+
+      const date = todayDateStr();
+      const heure = timeStr();
+
+      // 2) Récupérer toutes les présences du jour avec une formule robuste
+      // IS_SAME(date, DATETIME_PARSE("YYYY-MM-DD"), "day")
+      const presFormula = `IS_SAME({${PRES_FIELDS.date}}, DATETIME_PARSE("${date}"), "day")`;
+      const presUrlBase =
+        `https://api.airtable.com/v0/${base}/${presTable}?pageSize=100&filterByFormula=${encodeURIComponent(presFormula)}`;
+
+      const records = await fetchAllRecords(presUrlBase);
+
+      // 3) Trouver la ligne du jour pour cet employé
+      const todayRow = records.find(r => {
+        const links = r.fields?.[PRES_FIELDS.employeLink];
+        return Array.isArray(links) && links.includes(employee.id);
+      });
+
+      const hasRow = !!todayRow;
+
+      // ARRIVEE
+      if (chosenType === "arrivee") {
+        if (!hasRow) {
+          // créer la ligne
+          const createBody = {
+            fields: {
+              [PRES_FIELDS.employeLink]: [employee.id],
+              [PRES_FIELDS.date]: date,
+              [PRES_FIELDS.arrivee]: heure
+            }
+          };
+
+          await airtableFetch(`https://api.airtable.com/v0/${base}/${presTable}`, {
+            method: "POST",
+            body: JSON.stringify(createBody)
+          });
+
+          return { action: "arrivee", nom, heure };
+        }
+
+        const f = todayRow.fields || {};
+        if (f[PRES_FIELDS.arrivee]) {
+          throw new Error("Arrivée déjà enregistrée aujourd’hui.");
+        }
+
+        await airtableFetch(`https://api.airtable.com/v0/${base}/${presTable}/${todayRow.id}`, {
+          method: "PATCH",
+          body: JSON.stringify({ fields: { [PRES_FIELDS.arrivee]: heure } })
+        });
+
+        return { action: "arrivee", nom, heure };
+      }
+
+      // DEPART
+      if (!hasRow) {
+        throw new Error("Aucune arrivée trouvée aujourd’hui. Veuillez d’abord enregistrer l’arrivée.");
+      }
+
+      const f = todayRow.fields || {};
+      if (!f[PRES_FIELDS.arrivee]) {
+        throw new Error("Arrivée manquante. Veuillez enregistrer l’arrivée avant le départ.");
+      }
+      if (f[PRES_FIELDS.depart]) {
+        throw new Error("Départ déjà enregistré aujourd’hui.");
+      }
+
+      await airtableFetch(`https://api.airtable.com/v0/${base}/${presTable}/${todayRow.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ fields: { [PRES_FIELDS.depart]: heure } })
+      });
+
+      return { action: "depart", nom, heure };
+    }
 
     // =============================
     // Submit
@@ -249,15 +353,12 @@
       setLoading(true);
 
       try {
-        // On appelle toujours l'API maintenant
-        let result = await callMyApi(pin);
-
-        const now = new Date();
-        const time = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-        const label = (type === "arrivee") ? "Arrivée" : "Départ";
-        const nom = result?.nom || result?.employeeName || "Employé";
-
-        showAlert("ok", `${label} enregistrée à ${time}\n${nom}`);
+        const result = await savePresence(pin, type);
+        if (result.action === "arrivee") {
+          showAlert("ok", `Arrivée enregistrée à ${result.heure}\n${result.nom}`);
+        } else {
+          showAlert("ok", `Départ enregistré à ${result.heure}\n${result.nom}`);
+        }
 
         setTimeout(() => {
           pinEl.value = "";
@@ -265,7 +366,7 @@
         }, 2500);
 
       } catch (e) {
-        showAlert("err", (e && e.message) ? e.message : "Erreur de connexion. Réessayez.");
+        showAlert("err", e?.message || "Erreur de connexion. Réessayez.");
       } finally {
         setLoading(false);
       }
