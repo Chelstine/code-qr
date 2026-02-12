@@ -50,7 +50,7 @@ app.post('/api/pointage', async (req, res) => {
         const employee = empJson.records[0];
         // Vérification stricte : Si "actif" n'est pas coché (undefined ou false), on bloque.
         if (!employee.fields || !employee.fields.actif) {
-            return res.status(403).json({ error: "Compte désactivé." });
+            return res.status(403).json({ error: "⚠️ Accès temporairement indisponible.\nVeuillez vous rapprocher du service administratif." });
         }
 
         const now = new Date();
