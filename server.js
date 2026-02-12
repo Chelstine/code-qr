@@ -56,6 +56,12 @@ app.post('/api/pointage', async (req, res) => {
         const dateStr = now.toISOString().split("T")[0]; // YYYY-MM-DD
         const timeStr = now.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 
+        // 2. Vérification : Est-ce le week-end ?
+        const jourSemaine = now.getDay(); // 0 = Dimanche, 6 = Samedi
+        if (jourSemaine === 0 || jourSemaine === 6) {
+            return res.status(403).json({ error: "Le pointage est interdit le week-end (Samedi et Dimanche)." });
+        }
+
         // 2. Chercher si une présence existe déjà pour aujourd'hui (date)
         const presTableEncoded = encodeURIComponent(AIRTABLE_TABLE_PRESENCES);
         const presFormula = `IS_SAME({date}, DATETIME_PARSE("${dateStr}"), "day")`;
