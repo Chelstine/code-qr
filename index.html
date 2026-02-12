@@ -414,7 +414,7 @@
         const label = (type === "arrivee") ? "Arrivée" : "Départ";
         const nom = result?.nom || result?.employeeName || "Employé";
 
-        showAlert("ok", `${label} enregistrée à ${time}\n${nom}`);
+        showAlert("ok", `✔️ Votre enregistrement a bien été pris en compte.\nMerci et excellente continuation.`);
 
         setTimeout(() => {
           pinEl.value = "";
