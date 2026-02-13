@@ -93,7 +93,7 @@ app.post('/api/pointage', async (req, res) => {
                     return res.status(400).json({ error: "Arrivée déjà enregistrée aujourd'hui." });
                 }
                 // UPDATE (Patch)
-                await fetch(`${presTableUrl}/${todayRow.id}`, {
+                const patchRes = await fetch(`${presTableUrl}/${todayRow.id}`, {
                     method: 'PATCH',
                     headers: {
                         Authorization: `Bearer ${AIRTABLE_API_KEY}`,
@@ -101,9 +101,14 @@ app.post('/api/pointage', async (req, res) => {
                     },
                     body: JSON.stringify({ fields: { heure_arrivee: timeStr } })
                 });
+
+                if (!patchRes.ok) {
+                    const errText = await patchRes.text();
+                    throw new Error(`Erreur Airtable (Update Arrivée): ${patchRes.status} ${errText}`);
+                }
             } else {
                 // CREATE (Post)
-                await fetch(presTableUrl, {
+                const postRes = await fetch(presTableUrl, {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${AIRTABLE_API_KEY}`,
@@ -117,6 +122,11 @@ app.post('/api/pointage', async (req, res) => {
                         }
                     })
                 });
+
+                if (!postRes.ok) {
+                    const errText = await postRes.text();
+                    throw new Error(`Erreur Airtable (Create Arrivée): ${postRes.status} ${errText}`);
+                }
             }
         } else if (type === "depart") {
             if (!todayRow) {
@@ -126,7 +136,7 @@ app.post('/api/pointage', async (req, res) => {
                 return res.status(400).json({ error: "Départ déjà enregistré aujourd'hui." });
             }
             // UPDATE (Patch)
-            await fetch(`${presTableUrl}/${todayRow.id}`, {
+            const patchRes = await fetch(`${presTableUrl}/${todayRow.id}`, {
                 method: 'PATCH',
                 headers: {
                     Authorization: `Bearer ${AIRTABLE_API_KEY}`,
@@ -134,6 +144,11 @@ app.post('/api/pointage', async (req, res) => {
                 },
                 body: JSON.stringify({ fields: { heure_depart: timeStr } })
             });
+
+            if (!patchRes.ok) {
+                const errText = await patchRes.text();
+                throw new Error(`Erreur Airtable (Update Départ): ${patchRes.status} ${errText}`);
+            }
         }
 
         res.json({
