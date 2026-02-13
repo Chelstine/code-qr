@@ -52,14 +52,25 @@
     }
 
     .badge {
-      width: 64px;
-      height: 64px;
-      border-radius: 999px;
-      background: rgba(45, 75, 142, .10);
+      width: 100px;
+      /* Grandi de 64px à 100px */
+      height: 100px;
+      border-radius: var(--radius);
+      /* Changé de rond à arrondi pour mieux coller au logo */
+      background: #fdfdfd;
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(45, 75, 142, .15);
+      border: 1px solid var(--border);
+      overflow: hidden;
+      /* Pour que l'image ne dépasse pas */
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     .badge svg {
@@ -260,10 +271,7 @@
   <div class="wrap">
     <div class="header">
       <div class="badge" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="9"></circle>
-          <path d="M12 7v6l4 2"></path>
-        </svg>
+        <img src="icon-512x512.png" alt="Logo NOVEK">
       </div>
       <div>
         <h1>Pointage</h1>
