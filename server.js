@@ -12,10 +12,10 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '.')));
 
 // Configuration Airtable depuis les variables d'environnement
-const AIRTABLE_API_KEY = process.env.AIRTABLE_API_KEY;
-const AIRTABLE_BASE_ID = process.env.AIRTABLE_BASE_ID;
-const AIRTABLE_TABLE_EMPLOYEES = process.env.AIRTABLE_TABLE_EMPLOYEES || "Employees";
-const AIRTABLE_TABLE_PRESENCES = process.env.AIRTABLE_TABLE_PRESENCES || "Présences";
+const AIRTABLE_API_KEY = (process.env.AIRTABLE_API_KEY || "").trim();
+const AIRTABLE_BASE_ID = (process.env.AIRTABLE_BASE_ID || "").trim();
+const AIRTABLE_TABLE_EMPLOYEES = (process.env.AIRTABLE_TABLE_EMPLOYEES || "Employees").trim();
+const AIRTABLE_TABLE_PRESENCES = (process.env.AIRTABLE_TABLE_PRESENCES || "Présences").trim();
 
 // Route API sécurisée pour le pointage
 app.post('/api/pointage', async (req, res) => {
