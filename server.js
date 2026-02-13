@@ -99,7 +99,7 @@ app.post('/api/pointage', async (req, res) => {
                         Authorization: `Bearer ${AIRTABLE_API_KEY}`,
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ fields: { heure_arrivee: now.toISOString() } })
+                    body: JSON.stringify({ fields: { heure_arrivee: timeStr } })
                 });
 
                 if (!patchRes.ok) {
@@ -118,7 +118,7 @@ app.post('/api/pointage', async (req, res) => {
                         fields: {
                             employe: [employee.id],
                             date: dateStr,
-                            heure_arrivee: now.toISOString()
+                            heure_arrivee: timeStr
                         }
                     })
                 });
@@ -142,7 +142,7 @@ app.post('/api/pointage', async (req, res) => {
                     Authorization: `Bearer ${AIRTABLE_API_KEY}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ fields: { heure_depart: now.toISOString() } })
+                body: JSON.stringify({ fields: { heure_depart: timeStr } })
             });
 
             if (!patchRes.ok) {
