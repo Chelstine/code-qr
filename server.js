@@ -38,7 +38,7 @@ app.post('/api/pointage', async (req, res) => {
 
         if (!empRes.ok) {
             const errText = await empRes.text();
-            throw new Error(`Erreur Airtable (Search Employee): ${empRes.status} ${errText}`);
+            throw new Error(`Erreur Airtable (Search Employee): ${empRes.status} ${errText} (URL: ${empUrl})`);
         }
 
         const empJson = await empRes.json();
@@ -74,7 +74,7 @@ app.post('/api/pointage', async (req, res) => {
 
         if (!presRes.ok) {
             const errText = await presRes.text();
-            throw new Error(`Erreur Airtable (Search Presence): ${presRes.status} ${errText}`);
+            throw new Error(`Erreur Airtable (Search Presence): ${presRes.status} ${errText} (URL: ${presUrl})`);
         }
 
         const presJson = await presRes.json();
@@ -87,7 +87,6 @@ app.post('/api/pointage', async (req, res) => {
 
         const presTableUrl = `https://api.airtable.com/v0/${AIRTABLE_BASE_ID}/${presTableEncoded}`;
 
-        // LOGIQUE METIER (Compatible avec colonnes: 'heure_arrivee', 'heure_depart')
         if (type === "arrivee") {
             if (todayRow) {
                 if (todayRow.fields.heure_arrivee) {
