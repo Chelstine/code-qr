@@ -44,7 +44,7 @@ app.post('/api/pointage', async (req, res) => {
         const empJson = await empRes.json();
 
         if (!empJson.records || empJson.records.length === 0) {
-            return res.status(401).json({ error: "Code PIN incorrect." });
+            return res.status(401).json({ error: `Code PIN incorrect. (Table: ${AIRTABLE_TABLE_EMPLOYEES})` });
         }
 
         const employee = empJson.records[0];
